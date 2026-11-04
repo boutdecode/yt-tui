@@ -1,7 +1,5 @@
 # yt-tui
 
-**English** · [Français](README.fr.md)
-
 A YouTube music player for the terminal, built with [Charm](https://charm.sh)
 (Bubble Tea, Bubbles, Lip Gloss). Search and download through
 [yt-dlp](https://github.com/yt-dlp/yt-dlp), playback through `mpv` (driven over IPC).

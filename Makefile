@@ -37,8 +37,8 @@ release:
 	for a in amd64 arm64; do \
 	  d=dist/rel/$$a; mkdir -p $$d; \
 	  CGO_ENABLED=0 GOOS=linux GOARCH=$$a $(GO) build -trimpath -ldflags '$(LDFLAGS)' -o $$d/yt-tui ./cmd/yt-tui || exit 1; \
-	  cp packaging/deb/yt-tui.desktop README.md README.fr.md $$d/; \
-	  tar -czf dist/yt-tui_$(VERSION)_linux_$$a.tar.gz -C $$d yt-tui yt-tui.desktop README.md README.fr.md || exit 1; \
+	  cp packaging/deb/yt-tui.desktop README.md $$d/; \
+	  tar -czf dist/yt-tui_$(VERSION)_linux_$$a.tar.gz -C $$d yt-tui yt-tui.desktop README.md || exit 1; \
 	done
 	rm -rf dist/rel
 	cd dist && sha256sum yt-tui_$(VERSION)_linux_*.tar.gz > checksums.txt
