@@ -1,89 +1,94 @@
 # yt-tui
 
-Lecteur de musique YouTube en terminal, construit avec [Charm](https://charm.sh)
-(Bubble Tea, Bubbles, Lip Gloss). Recherche et téléchargement via
-[yt-dlp](https://github.com/yt-dlp/yt-dlp), lecture via `mpv` (piloté par IPC).
+**English** · [Français](README.fr.md)
+
+A YouTube music player for the terminal, built with [Charm](https://charm.sh)
+(Bubble Tea, Bubbles, Lip Gloss). Search and download through
+[yt-dlp](https://github.com/yt-dlp/yt-dlp), playback through `mpv` (driven over IPC).
+
+![yt-tui](docs/screenshot.png)
 
 ## Interface
-Thème Lip Gloss adaptatif (clair/sombre), onglets, panneau lecteur avec barre de progression en dégradé
-et **miniatures** devant chaque morceau. Elles sont dessinées en demi-blocs `▀` (couleurs 24 bits : un
-terminal truecolor donne le meilleur rendu), téléchargées en arrière-plan depuis `i.ytimg.com` et mises
-en cache dans `~/.cache/yt-tui/thumbs`.
+Adaptive Lip Gloss theme (light/dark), tabs, and a player panel with a gradient progress bar and
+**thumbnails** next to every track. They are drawn with `▀` half-blocks (24-bit colors: a truecolor
+terminal gives the best result), downloaded in the background from `i.ytimg.com` and cached in
+`~/.cache/yt-tui/thumbs`.
 
-## Intégration au système (MPRIS)
-yt-tui s'annonce sur le bus D-Bus de session comme lecteur `org.mpris.MediaPlayer2.yt-tui`. Le widget son
-de Cinnamon (ou GNOME/KDE), les touches multimédia et `playerctl` affichent donc le titre, l'artiste, la
-pochette et la progression, et pilotent lecture/pause, suivant/précédent, stop, volume et seek (seek
-désactivé pendant un streaming). Sans bus de session, l'application fonctionne normalement sans cette
-intégration. Si plusieurs instances tournent, les suivantes se nomment `…yt-tui.instance<pid>`.
+## System integration (MPRIS)
+yt-tui registers on the session D-Bus as the player `org.mpris.MediaPlayer2.yt-tui`. The sound applet of
+Cinnamon (or GNOME/KDE), media keys and `playerctl` therefore show the title, artist, cover art and
+progress, and control play/pause, next/previous, stop, volume and seek (seek is disabled while
+streaming). Without a session bus, the application works normally without this integration. When several
+instances run, the following ones are named `…yt-tui.instance<pid>`.
 
-## Installation rapide
+## Quick install
 ```
 curl -fsSL https://raw.githubusercontent.com/kevinbalicot/yt-tui/main/install.sh | bash
 ```
-Installe le binaire (Linux amd64/arm64, somme SHA256 vérifiée) dans `~/.local/bin` et signale les
-dépendances manquantes. Variables : `YT_TUI_VERSION` (ex. `0.2.0`), `YT_TUI_PREFIX` (défaut `~/.local`).
-Désinstaller : `curl -fsSL …/install.sh | bash -s -- --uninstall`.
+Installs the binary (Linux amd64/arm64, SHA256 checksum verified) in `~/.local/bin` and reports missing
+dependencies. Variables: `YT_TUI_VERSION` (e.g. `0.2.0`), `YT_TUI_PREFIX` (default `~/.local`).
+Uninstall: `curl -fsSL …/install.sh | bash -s -- --uninstall`.
 
-## Prérequis
-`go` ≥ 1.24, `yt-dlp`, `mpv`, `ffmpeg`, et un runtime JavaScript (`deno`, `node` ou `bun`,
-exigé par YouTube pour yt-dlp).
+## Requirements
+`go` ≥ 1.24, `yt-dlp`, `mpv`, `ffmpeg`, and a JavaScript runtime (`deno`, `node` or `bun`,
+required by YouTube for yt-dlp).
 
-## Lancer
+## Run
 ```
 go build -o yt-tui ./cmd/yt-tui && ./yt-tui
 ```
-Options : `--dir` (téléchargements, défaut `~/Music/yt-tui`), `--format` (mp3|opus|m4a|flac|wav),
-`--auto-cache` (télécharge en arrière-plan ce qui est lu en streaming), `--results` (1–50),
-`--transparent` (garde le fond du terminal au lieu de peindre celui de l'application),
-`--static-theme` (palette fixe : par défaut, accents, bordures et fond suivent les couleurs
-dominantes de la miniature de la piste en cours). L'application garde une marge autour de l'écran
-(2 colonnes / 1 ligne, réduite sur les petits terminaux).
+Options: `--dir` (downloads, default `~/Music/yt-tui`), `--format` (mp3|opus|m4a|flac|wav),
+`--auto-cache` (download in the background what is streamed), `--results` (1–50),
+`--transparent` (keep the terminal background instead of painting the application's),
+`--static-theme` (fixed palette: by default, accents, borders and background follow the dominant colors
+of the current track's thumbnail). The application keeps a margin around the screen
+(2 columns / 1 row, reduced on small terminals).
 
-**Langue** : l'interface existe en français et en anglais ; elle suit la langue du système
-(`LC_ALL`, `LC_MESSAGES`, `LANGUAGE`, `LANG`) — français si elle commence par `fr`, anglais sinon.
-`--lang fr|en` (ou `YT_TUI_LANG=en`) la force. Les playlists « Récents » et « Favoris » sont stockées
-sous leur nom français et affichées traduites.
+**Language**: the interface is available in French and English; it follows the system language
+(`LC_ALL`, `LC_MESSAGES`, `LANGUAGE`, `LANG`) — French if it starts with `fr`, English otherwise.
+`--lang fr|en` (or `YT_TUI_LANG=en`) forces it. The “Recent” and “Favorites” playlists are stored
+under their French names (“Récents”, “Favoris”) and displayed translated.
 
-`--no-resume` ne restaure pas la file et la position de la session précédente (sauvegardées à la
-sortie dans `~/.config/yt-tui/session.json`, reprise avec `espace`), `--no-notify` coupe les
-notifications de bureau au changement de piste (envoyées seulement quand la fenêtre n'a pas le focus, si le terminal le signale), `--version` affiche la version.
+`--no-resume` does not restore the queue and position of the previous session (saved on exit in
+`~/.config/yt-tui/session.json`, resume with `space`), `--no-notify` turns off desktop notifications
+on track change (sent only when the window is not focused, if the terminal reports focus),
+`--version` prints the version.
 
-### Sans interface
+### Headless
 ```
-yt-tui search [-n N] [--json] <requête>        # id, durée, chaîne, titre
-yt-tui download [--dir D] [--format F] <url | id | requête>
-yt-tui list [--dir D] [--json]                 # bibliothèque locale
+yt-tui search [-n N] [--json] <query>          # id, duration, channel, title
+yt-tui download [--dir D] [--format F] <url | id | query>
+yt-tui list [--dir D] [--json]                 # local library
 ```
 
-### Installation / paquet
-`make build` · `make test` · `make install` (dans `~/.local/bin`) · `make deb` (→ `dist/yt-tui_<version>_<arch>.deb`).
+### Install / package
+`make build` · `make test` · `make install` (into `~/.local/bin`) · `make deb` (→ `dist/yt-tui_<version>_<arch>.deb`).
 
-`--debug` écrit `yt-tui.log` et `mpv.log` dans `~/.config/yt-tui/` pour diagnostiquer un problème.
+`--debug` writes `yt-tui.log` and `mpv.log` in `~/.config/yt-tui/` to diagnose a problem.
 
-Au premier lancement, `~/.config/yt-tui/yt-dlp.conf` est créé (runtime JS, client YouTube) ;
-il est utilisé par la recherche, le téléchargement et le streaming mpv. Modifiez-le si YouTube change.
+On first launch, `~/.config/yt-tui/yt-dlp.conf` is created (JS runtime, YouTube client); it is used by
+search, download and mpv streaming. Edit it if YouTube changes.
 
-## Raccourcis
-Interface d'après la maquette : 5 onglets (`1` File, `2` Recherche, `3` Bibliothèque, `4` Playlists, `5` Téléchargements).
+## Shortcuts
+Five tabs (`1` Queue, `2` Search, `3` Library, `4` Playlists, `5` Downloads).
 
-| Touche | Action |
+| Key | Action |
 |---|---|
-| `tab` / `1`–`5` | changer d'onglet |
-| `↑`/`↓`, `pgup`/`pgdn`, `g`/`G` | naviguer |
-| `entrée` | lire (une playlist/chaîne dans la recherche : l'ouvrir, `esc` pour revenir) |
-| `q` | quitter (confirmation : `entrée`; `ctrl+c` quitte directement) |
-| `espace` | pause · `,` / `.` (ou `←`/`→`) seek ±5 s · `+`/`-` volume · `p` / `n` (ou `<` / `>`) précédent / suivant |
-| `s` / `l` | aléatoire / répéter (off → file → piste) |
-| `R` / `z` | radio automatique (suggestions YouTube en fin de file) / minuteur de sommeil (15 → 30 → 60 min → fin de piste) |
-| `f` | favori ♥ (playlist « Favoris ») |
-| `a` | ajouter à la file · `A` (playlist ouverte) tout ajouter, avec confirmation au-delà de 10 pistes · `D` télécharger · `P` → playlist (créée si absente) |
-| **File** | `d` retirer · `J`/`K` déplacer |
-| **Recherche** | `/` saisir · `entrée` lancer · `ctrl+f` type (tout, vidéos, playlists, chaînes) |
-| **Bibliothèque** | `←`/`→` colonne (artistes → albums → pistes) · `r` réanalyser · `/` filtrer · `e` éditer artiste/album · `X` supprimer le fichier (confirmation) |
-| **Playlists** | `←`/`→` liste / pistes · `N` nouvelle · `R` renommer · `X` supprimer · `d` retirer · `J`/`K` réordonner · `e` exporter en `.m3u` (dans le dossier de musique) · « Récents » : historique en lecture seule |
+| `tab` / `1`–`5` | switch tab |
+| `↑`/`↓`, `pgup`/`pgdn`, `g`/`G` | navigate |
+| `enter` | play (a playlist/channel in Search: open it, `esc` to go back) |
+| `q` | quit (confirm with `enter`; `ctrl+c` quits immediately) |
+| `space` | pause · `,` / `.` (or `←`/`→`) seek ±5 s · `+`/`-` volume · `p` / `n` (or `<` / `>`) previous / next |
+| `s` / `l` | shuffle / repeat (off → queue → track) |
+| `R` / `z` | auto radio (YouTube suggestions at the end of the queue) / sleep timer (15 → 30 → 60 min → end of track) |
+| `f` | favorite ♥ (“Favorites” playlist) |
+| `a` | add to queue · `A` (opened playlist) add all, with confirmation above 10 tracks · `D` download · `P` → playlist (created if missing) |
+| **Queue** | `d` remove · `J`/`K` move |
+| **Search** | `/` type · `enter` search · `ctrl+f` type (all, videos, playlists, channels) |
+| **Library** | `←`/`→` column (artists → albums → tracks) · `r` rescan · `/` filter · `e` edit artist/album · `X` delete the file (confirmation) |
+| **Playlists** | `←`/`→` list / tracks · `N` new · `R` rename · `X` delete · `d` remove · `J`/`K` reorder · `e` export as `.m3u` (in the music folder) · “Recent”: read-only history |
 
-Bibliothèque : les téléchargements embarquent leurs métadonnées (artiste, album, année) lues par `ffprobe` ;
-l'index est mis en cache dans `~/.cache/yt-tui/library.json` (seuls les fichiers nouveaux ou modifiés sont ré-analysés).
+Library: downloads embed their metadata (artist, album, year), read with `ffprobe`; the index is cached
+in `~/.cache/yt-tui/library.json` (only new or modified files are rescanned).
 
-Données : playlists dans `~/.config/yt-tui/playlists.json`, fichiers nommés `Titre [id].ext`.
+Data: playlists in `~/.config/yt-tui/playlists.json`, files named `Title [id].ext`.
