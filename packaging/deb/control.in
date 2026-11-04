@@ -1,0 +1,12 @@
+Package: yt-tui
+Version: @VERSION@
+Section: sound
+Priority: optional
+Architecture: @ARCH@
+Depends: mpv, ffmpeg
+Recommends: yt-dlp, nodejs | deno
+Maintainer: Kevin <kevin@akawaka.fr>
+Description: Lecteur de musique YouTube en terminal
+ yt-tui cherche sur YouTube (yt-dlp), lit via mpv, télécharge en fichiers audio,
+ gère file d'attente, playlists et bibliothèque locale, et s'intègre au système
+ (MPRIS, notifications de bureau). Interface Bubble Tea / Lip Gloss.

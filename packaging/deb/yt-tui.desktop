@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=yt-tui
+Comment=Lecteur de musique YouTube en terminal
+Exec=yt-tui
+Icon=multimedia-audio-player
+Terminal=true
+Categories=AudioVideo;Audio;Player;ConsoleOnly;
+Keywords=youtube;musique;music;player;
