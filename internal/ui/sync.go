@@ -65,19 +65,19 @@ func (m *Model) syncSearch() {
 		}
 	} else {
 		if (m.kind == kindAll || m.kind == kindChannels) && len(m.resChans) > 0 {
-			add(headerRow{"Chaînes"}, sref{})
+			add(headerRow{txt("Chaînes")}, sref{})
 			for i, e := range m.resChans {
 				add(textRow{label: e.Title}, sref{yt.KindChannel, i})
 			}
 		}
 		if (m.kind == kindAll || m.kind == kindPlaylists) && len(m.resPlays) > 0 {
-			add(headerRow{"Playlists"}, sref{})
+			add(headerRow{txt("Playlists")}, sref{})
 			for i, e := range m.resPlays {
 				add(textRow{label: e.Title, sub: "· " + e.Channel}, sref{yt.KindPlaylist, i})
 			}
 		}
 		if (m.kind == kindAll || m.kind == kindVideos) && len(m.resVideos) > 0 {
-			add(headerRow{"Vidéos"}, sref{})
+			add(headerRow{txt("Vidéos")}, sref{})
 			for i, r := range m.trackRows(m.resVideos, false) {
 				add(r, sref{yt.KindVideo, i})
 			}
@@ -162,7 +162,7 @@ func (m *Model) syncLibrary() {
 	})
 	rows := make([]row, len(m.libArtistN))
 	for i, a := range m.libArtistN {
-		rows[i] = textRow{label: a}
+		rows[i] = textRow{label: artistDisplay(a)}
 	}
 	m.libArtists.SetRows(rows)
 	m.syncLibAlbums(false)
@@ -254,11 +254,28 @@ func (m *Model) libSelection() []yt.Track {
 
 // ---------- playlists ----------
 
+// plDisplay est le nom affiché d'une playlist : les noms réservés (stockés tels quels)
+// sont traduits, les autres restent inchangés.
+func plDisplay(name string) string {
+	if name == recentName || name == favName {
+		return txt(name)
+	}
+	return name
+}
+
+// artistDisplay traduit l'artiste de repli de la bibliothèque (« Inconnu »).
+func artistDisplay(a string) string {
+	if a == "Inconnu" {
+		return txt(a)
+	}
+	return a
+}
+
 func (m *Model) syncPlaylists() {
 	m.plNames = append([]string{recentName}, m.store.Names()...)
 	rows := make([]row, len(m.plNames))
 	for i, n := range m.plNames {
-		rows[i] = textRow{label: n, sub: "· " + itoa(len(m.playlistTracks(n)))}
+		rows[i] = textRow{label: plDisplay(n), sub: "· " + itoa(len(m.playlistTracks(n)))}
 	}
 	m.plL.SetRows(rows)
 	m.syncPlTracks(false)
@@ -323,7 +340,7 @@ func (m *Model) focusTrack() (yt.Track, bool) {
 func (m *Model) toggleFav() {
 	t, ok := m.focusTrack()
 	if !ok {
-		m.setStatus("Favoris : placez le curseur sur une piste")
+		m.setStatus(txt("Favoris : placez le curseur sur une piste"))
 		return
 	}
 	for i, f := range m.store.Tracks(favName) {
@@ -332,7 +349,7 @@ func (m *Model) toggleFav() {
 				m.setError(err.Error())
 				return
 			}
-			m.setStatus("♥ retiré des favoris : " + t.Title)
+			m.setStatus(txt("♥ retiré des favoris : %s", t.Title))
 			m.keepCursors(m.syncAll)
 			return
 		}
@@ -341,7 +358,7 @@ func (m *Model) toggleFav() {
 		m.setError(err.Error())
 		return
 	}
-	m.setStatus("♥ ajouté aux favoris : " + t.Title)
+	m.setStatus(txt("♥ ajouté aux favoris : %s", t.Title))
 	m.keepCursors(m.syncAll)
 }
 

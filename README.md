@@ -40,6 +40,11 @@ Options : `--dir` (téléchargements, défaut `~/Music/yt-tui`), `--format` (mp3
 dominantes de la miniature de la piste en cours). L'application garde une marge autour de l'écran
 (2 colonnes / 1 ligne, réduite sur les petits terminaux).
 
+**Langue** : l'interface existe en français et en anglais ; elle suit la langue du système
+(`LC_ALL`, `LC_MESSAGES`, `LANGUAGE`, `LANG`) — français si elle commence par `fr`, anglais sinon.
+`--lang fr|en` (ou `YT_TUI_LANG=en`) la force. Les playlists « Récents » et « Favoris » sont stockées
+sous leur nom français et affichées traduites.
+
 `--no-resume` ne restaure pas la file et la position de la session précédente (sauvegardées à la
 sortie dans `~/.config/yt-tui/session.json`, reprise avec `espace`), `--no-notify` coupe les
 notifications de bureau au changement de piste (envoyées seulement quand la fenêtre n'a pas le focus, si le terminal le signale), `--version` affiche la version.

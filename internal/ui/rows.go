@@ -95,7 +95,7 @@ func (r trackRow) Render(w int, sel bool) []string {
 		meta = append(meta, seg(sel, cPink, true, "♥"))
 	}
 	if r.local {
-		meta = append(meta, seg(sel, cGreen, true, "⬇ local"))
+		meta = append(meta, seg(sel, cGreen, true, txt("⬇ local")))
 	}
 	if r.t.Album != "" && r.t.Album != "Singles" {
 		meta = append(meta, seg(sel, mutedFg, false, r.t.Album))

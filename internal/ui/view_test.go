@@ -56,7 +56,9 @@ func testModel(t *testing.T, w, h int) Model {
 	return m
 }
 
-func TestViewFitsTerminal(t *testing.T) {
+func TestViewFitsTerminal(t *testing.T) { viewFits(t) }
+
+func viewFits(t *testing.T) {
 	for _, sz := range [][2]int{{140, 40}, {100, 30}, {80, 24}, {60, 16}} {
 		for tb := tab(0); tb < numTabs; tb++ {
 			for _, prompting := range []bool{false, true} {
@@ -69,11 +71,11 @@ func TestViewFitsTerminal(t *testing.T) {
 				out := m.View()
 				lines := strings.Split(out, "\n")
 				if len(lines) != sz[1] {
-					t.Errorf("%dx%d %s prompt=%v : %d lignes, attendu %d", sz[0], sz[1], tabNames[tb], prompting, len(lines), sz[1])
+					t.Errorf("%dx%d %s prompt=%v : %d lignes, attendu %d", sz[0], sz[1], tabName(tb), prompting, len(lines), sz[1])
 				}
 				for i, l := range lines {
 					if w := lipgloss.Width(l); w > sz[0] {
-						t.Errorf("%dx%d %s prompt=%v ligne %d : largeur %d > %d : %q", sz[0], sz[1], tabNames[tb], prompting, i, w, sz[0], l)
+						t.Errorf("%dx%d %s prompt=%v ligne %d : largeur %d > %d : %q", sz[0], sz[1], tabName(tb), prompting, i, w, sz[0], l)
 						break
 					}
 				}

@@ -96,10 +96,10 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 	switch s { // touches globales
 	case "q":
-		return m, m.openPrompt(promptQuit, "Quitter yt-tui ?", "", "", nil)
+		return m, m.openPrompt(promptQuit, txt("Quitter yt-tui ?"), "", "", nil)
 	case "R":
 		m.radio = !m.radio
-		m.setStatus("Radio automatique : " + onOff(m.radio))
+		m.setStatus(txt("Radio automatique : %s", onOff(m.radio)))
 		if m.radio && m.hasCur && m.qpos == len(m.queue)-1 {
 			return m, m.radioCmd()
 		}
@@ -143,14 +143,14 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "s":
 		m.shuffle = !m.shuffle
 		m.resetOrder()
-		m.setStatus("Lecture aléatoire : " + onOff(m.shuffle))
+		m.setStatus(txt("Lecture aléatoire : %s", onOff(m.shuffle)))
 	case "l":
 		m.repeat = (m.repeat + 1) % 3
-		m.setStatus("Répéter : " + m.repeatLabel())
+		m.setStatus(txt("Répéter : %s", m.repeatLabel()))
 	case "a":
 		if ts := m.selectedTracks(); len(ts) > 0 {
 			m.enqueue(ts...)
-			m.setStatus("Ajouté à la file : " + plural(len(ts), "piste", "pistes"))
+			m.setStatus(txt("Ajouté à la file : %s", plural(len(ts), "piste", "pistes")))
 		}
 	case "D":
 		for _, t := range m.selectedTracks() {
@@ -217,7 +217,7 @@ func (m *Model) keySearch(s string) (bool, tea.Cmd) {
 		}
 		if e, isEntry := m.searchEntry(); isEntry {
 			m.loading = true
-			m.setStatus("Ouverture de « " + e.Title + " »…")
+			m.setStatus(txt("Ouverture de « %s »…", e.Title))
 			return true, tea.Batch(m.spin.Tick, m.openCmd(e))
 		}
 		if m.drill != nil { // la collection ouverte devient la file
@@ -239,11 +239,11 @@ func (m *Model) keySearch(s string) (bool, tea.Cmd) {
 		}
 		ts := m.drill.tracks
 		if len(ts) > maxAddNoConfirm {
-			label := "Ajouter les " + plural(len(ts), "piste", "pistes") + " à la file ?"
+			label := txt("Ajouter les %s à la file ?", plural(len(ts), "piste", "pistes"))
 			return true, m.openPrompt(promptAddAll, label, "", "", ts)
 		}
 		m.enqueue(ts...)
-		m.setStatus("Ajouté à la file : " + plural(len(ts), "piste", "pistes"))
+		m.setStatus(txt("Ajouté à la file : %s", plural(len(ts), "piste", "pistes")))
 		return true, nil
 	case "esc", "backspace":
 		if m.drill != nil {
@@ -255,7 +255,7 @@ func (m *Model) keySearch(s string) (bool, tea.Cmd) {
 		m.kind = (m.kind + 1) % numKinds
 		m.syncSearch()
 		m.searchL.SetCursor(0)
-		m.setStatus("Type de recherche : " + kindNames[m.kind])
+		m.setStatus(txt("Type de recherche : %s", kindName(m.kind)))
 		return true, nil
 	}
 	return false, nil
@@ -288,19 +288,19 @@ func (m *Model) keyLibrary(s string) (bool, tea.Cmd) {
 	case "e":
 		if t, ok := m.focusTrack(); ok {
 			if _, local := m.lib.Path(t.ID); local {
-				return true, m.openPrompt(promptTagArtist, "Artiste", t.Channel, t.ID, nil)
+				return true, m.openPrompt(promptTagArtist, txt("Artiste"), t.Channel, t.ID, nil)
 			}
 		}
-		m.setStatus("Tags : sélectionnez une piste dans la colonne Pistes")
+		m.setStatus(txt("Tags : sélectionnez une piste dans la colonne Pistes"))
 		return true, nil
 	case "X":
 		if t, ok := m.focusTrack(); ok {
-			return true, m.openPrompt(promptDeleteFile, "Supprimer le fichier « "+trunc(t.Title, 40)+" » ?", "", t.ID, nil)
+			return true, m.openPrompt(promptDeleteFile, txt("Supprimer le fichier « %s » ?", trunc(t.Title, 40)), "", t.ID, nil)
 		}
-		m.setStatus("Suppression : sélectionnez une piste dans la colonne Pistes")
+		m.setStatus(txt("Suppression : sélectionnez une piste dans la colonne Pistes"))
 		return true, nil
 	case "/":
-		return true, m.openPrompt(promptFilter, "Filtrer", m.libFilter, "", nil)
+		return true, m.openPrompt(promptFilter, txt("Filtrer"), m.libFilter, "", nil)
 	case "esc":
 		if m.libFilter != "" {
 			m.libFilter = ""
@@ -335,12 +335,12 @@ func (m *Model) keyPlaylists(s string) (bool, tea.Cmd) {
 		m.qpos = -1
 		return true, m.startTrack(start, false)
 	case "N":
-		return true, m.openPrompt(promptNew, "Nouvelle playlist", "", "", nil)
+		return true, m.openPrompt(promptNew, txt("Nouvelle playlist"), "", "", nil)
 	case "e":
 		return true, m.exportM3U()
 	case "R", "X", "d", "J", "K":
 		if m.plName() == recentName {
-			m.setStatus("« Récents » est en lecture seule")
+			m.setStatus(txt("« Récents » est en lecture seule"))
 			return true, nil
 		}
 		return m.keyPlaylistsEdit(s, i, hasTrack)
@@ -353,12 +353,12 @@ func (m *Model) keyPlaylistsEdit(s string, i int, hasTrack bool) (bool, tea.Cmd)
 	switch s {
 	case "R":
 		if name := m.plName(); name != "" {
-			return true, m.openPrompt(promptRename, "Renommer", name, name, nil)
+			return true, m.openPrompt(promptRename, txt("Renommer"), name, name, nil)
 		}
 		return true, nil
 	case "X":
 		if name := m.plName(); name != "" {
-			return true, m.openPrompt(promptDelete, "Supprimer « "+name+" » ?", "", name, nil)
+			return true, m.openPrompt(promptDelete, txt("Supprimer « %s » ?", name), "", name, nil)
 		}
 		return true, nil
 	case "d":
@@ -400,7 +400,7 @@ func (m Model) keySearchInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		m.searching, m.loading = false, true
 		m.input.Blur()
-		m.setStatus("Recherche de « " + q + " »…")
+		m.setStatus(txt("Recherche de « %s »…", q))
 		return m, tea.Batch(m.spin.Tick, m.searchCmd(q))
 	case "esc":
 		m.searching = false
@@ -429,9 +429,9 @@ func (m *Model) openPrompt(k promptKind, label, value, arg string, ts []yt.Track
 	m.prompt.SetValue(value)
 	m.prompt.CursorEnd()
 	m.prompt.Placeholder = map[promptKind]string{
-		promptAdd: "nom de la playlist (créée si absente)", promptNew: "nom de la nouvelle playlist",
-		promptRename: "nouveau nom", promptFilter: "texte à chercher (titre, artiste, album)",
-		promptTagArtist: "nom de l'artiste", promptTagAlbum: "nom de l'album",
+		promptAdd: txt("nom de la playlist (créée si absente)"), promptNew: txt("nom de la nouvelle playlist"),
+		promptRename: txt("nouveau nom"), promptFilter: txt("texte à chercher (titre, artiste, album)"),
+		promptTagArtist: txt("nom de l'artiste"), promptTagAlbum: txt("nom de l'album"),
 	}[k]
 	m.promptLabel = label
 	if k.isConfirm() {
@@ -484,21 +484,21 @@ func (m *Model) applyPrompt(kind promptKind, name, arg string, ts []yt.Track) te
 			}
 		}
 		if err := m.lib.Remove(arg); err != nil {
-			m.setError("Suppression impossible : " + err.Error())
+			m.setError(txt("Suppression impossible : %s", err.Error()))
 		} else {
-			m.setStatus("Fichier supprimé : " + title)
+			m.setStatus(txt("Fichier supprimé : %s", title))
 		}
 		m.keepCursors(m.syncAll)
 		return nil
 	case promptAddAll:
 		m.enqueue(ts...)
-		m.setStatus("Ajouté à la file : " + plural(len(ts), "piste", "pistes"))
+		m.setStatus(txt("Ajouté à la file : %s", plural(len(ts), "piste", "pistes")))
 		return nil
 	case promptDelete:
 		if err := m.store.Delete(arg); err != nil {
 			m.setError(err.Error())
 		} else {
-			m.setStatus("Playlist supprimée : " + arg)
+			m.setStatus(txt("Playlist supprimée : %s", arg))
 		}
 		m.plCol = 0
 		m.syncPlaylists()
@@ -508,7 +508,7 @@ func (m *Model) applyPrompt(kind promptKind, name, arg string, ts []yt.Track) te
 		return nil
 	}
 	if name == recentName && (kind == promptAdd || kind == promptNew || kind == promptRename) {
-		m.setError("« Récents » est un nom réservé")
+		m.setError(txt("« Récents » est un nom réservé"))
 		return nil
 	}
 	switch kind {
@@ -519,7 +519,7 @@ func (m *Model) applyPrompt(kind promptKind, name, arg string, ts []yt.Track) te
 				album = t.Album
 			}
 		}
-		return m.openPrompt(promptTagAlbum, "Album", album, arg+"\n"+name, nil)
+		return m.openPrompt(promptTagAlbum, txt("Album"), album, arg+"\n"+name, nil)
 	case promptTagAlbum:
 		id, artist, _ := strings.Cut(arg, "\n")
 		return m.tagsCmd(id, artist, name)
@@ -536,25 +536,25 @@ func (m *Model) applyPrompt(kind promptKind, name, arg string, ts []yt.Track) te
 			}
 		}
 		if added > 0 {
-			m.setStatus("Ajouté à « " + name + " » : " + plural(added, "piste", "pistes"))
+			m.setStatus(txt("Ajouté à « %s » : %s", name, plural(added, "piste", "pistes")))
 		} else {
-			m.setStatus("Déjà dans la playlist « " + name + " »")
+			m.setStatus(txt("Déjà dans la playlist « %s »", name))
 		}
 	case promptNew:
 		if ok, err := m.store.Create(name); err != nil {
 			m.setError(err.Error())
 		} else if !ok {
-			m.setError("La playlist « " + name + " » existe déjà")
+			m.setError(txt("La playlist « %s » existe déjà", name))
 		} else {
-			m.setStatus("Playlist créée : " + name)
+			m.setStatus(txt("Playlist créée : %s", name))
 		}
 	case promptRename:
 		if ok, err := m.store.Rename(arg, name); err != nil {
 			m.setError(err.Error())
 		} else if !ok {
-			m.setError("Impossible de renommer en « " + name + " »")
+			m.setError(txt("Impossible de renommer en « %s »", name))
 		} else {
-			m.setStatus("Playlist renommée : " + name)
+			m.setStatus(txt("Playlist renommée : %s", name))
 		}
 	}
 	m.syncPlaylists()
@@ -576,7 +576,7 @@ func (m *Model) tagsCmd(id, artist, album string) tea.Cmd {
 			title = t.Title
 		}
 	}
-	m.setStatus("Écriture des tags…")
+	m.setStatus(txt("Écriture des tags…"))
 	return func() tea.Msg { return tagsDoneMsg{title: title, err: lib.WriteTags(id, artist, album)} }
 }
 
@@ -584,14 +584,14 @@ func (m *Model) tagsCmd(id, artist, album string) tea.Cmd {
 func (m *Model) exportM3U() tea.Cmd {
 	name := m.plName()
 	if name == "" || len(m.plData) == 0 {
-		m.setStatus("Export : playlist vide")
+		m.setStatus(txt("Export : playlist vide"))
 		return nil
 	}
 	path := filepath.Join(m.cfg.MusicDir, playlist.FileName(name)+".m3u")
 	if err := os.WriteFile(path, []byte(playlist.M3U(name, m.plData, m.lib.Path)), 0o644); err != nil {
-		m.setError("Export impossible : " + err.Error())
+		m.setError(txt("Export impossible : %s", err.Error()))
 		return nil
 	}
-	m.setStatus("Playlist exportée : " + path)
+	m.setStatus(txt("Playlist exportée : %s", path))
 	return nil
 }

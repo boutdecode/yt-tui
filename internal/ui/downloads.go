@@ -27,7 +27,7 @@ type dlRow struct {
 }
 
 func (d dlState) String() string {
-	return [...]string{"en attente", "téléchargement", "terminé", "échec"}[d]
+	return txt([...]string{"en attente", "téléchargement", "terminé", "échec"}[d])
 }
 
 // dlManager lance les téléchargements (2 en parallèle max) et relaie leur
@@ -96,7 +96,7 @@ func (m Model) activeDownloads() int {
 // downloadsBody rend les lignes (2 lignes + 1 d'espace par téléchargement) dans w×h.
 func (m Model) downloadsBody(w, h int) string {
 	if len(m.downloads) == 0 {
-		return mutedStyle.Render("  Aucun téléchargement. Appuyez sur D sur un morceau.")
+		return mutedStyle.Render(txt("  Aucun téléchargement. Appuyez sur D sur un morceau."))
 	}
 	const rowH = 3
 	vis := max(1, h/rowH)

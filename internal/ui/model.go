@@ -35,7 +35,10 @@ const (
 	numTabs
 )
 
-var tabNames = [numTabs]string{"File", "Recherche", "Bibliothèque", "Playlists", "Téléchargements"}
+// tabName est le libellé (traduit) de l'onglet t.
+func tabName(t tab) string {
+	return txt([numTabs]string{"File", "Recherche", "Bibliothèque", "Playlists", "Téléchargements"}[t])
+}
 
 // Types de recherche (puces tout | vidéos | playlists | chaînes).
 type searchKind int
@@ -48,7 +51,10 @@ const (
 	numKinds
 )
 
-var kindNames = [numKinds]string{"tout", "vidéos", "playlists", "chaînes"}
+// kindName est le libellé (traduit) du type de recherche k.
+func kindName(k searchKind) string {
+	return txt([numKinds]string{"tout", "vidéos", "playlists", "chaînes"}[k])
+}
 
 // Modes de répétition.
 type repeatMode int
@@ -201,7 +207,7 @@ type Model struct {
 // New construit le modèle racine.
 func New(ctx context.Context, cfg config.Config, pl *player.Player, lib *library.Library, store *playlist.Store, thumbs *thumb.Store, mp *mpris.Server) Model {
 	in := textinput.New()
-	in.Placeholder = "Rechercher sur YouTube…"
+	in.Placeholder = txt("Rechercher sur YouTube…")
 	in.Prompt = ""
 	in.PlaceholderStyle = mutedStyle
 	in.TextStyle = lipgloss.NewStyle().Foreground(cSelFg)
@@ -252,7 +258,7 @@ func (m *Model) restoreSession(s session.State) {
 		m.played[s.Pos] = true
 		m.queueL.SetCursor(s.Pos)
 	}
-	m.setStatus("Session restaurée : " + plural(len(m.queue), "piste", "pistes") + " — espace pour reprendre")
+	m.setStatus(txt("Session restaurée : %s — espace pour reprendre", plural(len(m.queue), "piste", "pistes")))
 }
 
 // snapshot est l'état à persister.
@@ -334,7 +340,7 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case searchResultMsg:
 		m.loading = false
 		if msg.err != nil {
-			m.setError("Recherche : " + msg.err.Error())
+			m.setError(txt("Recherche : %s", msg.err.Error()))
 			break
 		}
 		m.resVideos, m.resPlays, m.resChans, m.drill = msg.videos, msg.playlists, msg.channels, nil
@@ -348,28 +354,28 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case collectionMsg:
 		m.loading = false
 		if msg.err != nil {
-			m.setError("Ouverture : " + msg.err.Error())
+			m.setError(txt("Ouverture : %s", msg.err.Error()))
 			break
 		}
 		m.drill = &drill{title: msg.entry.Title, tracks: msg.tracks}
 		m.syncSearch()
 		m.searchL.SetCursor(0)
-		m.setStatus(plural(len(msg.tracks), "vidéo", "vidéos") + " · esc pour revenir aux résultats")
+		m.setStatus(txt("%s · esc pour revenir aux résultats", plural(len(msg.tracks), "vidéo", "vidéos")))
 	case libRefreshedMsg:
 		m.libBusy = false
 		if msg.err != nil {
-			m.setError("Analyse : " + msg.err.Error())
+			m.setError(txt("Analyse : %s", msg.err.Error()))
 			break
 		}
 		m.syncLibrary()
 		m.syncQueue()
-		m.setStatus("Bibliothèque analysée : " + plural(len(m.lib.Tracks()), "piste", "pistes"))
+		m.setStatus(txt("Bibliothèque analysée : %s", plural(len(m.lib.Tracks()), "piste", "pistes")))
 	case radioMsg:
 		m.radioBusy = false
 		play := m.radioPlay
 		m.radioPlay = false
 		if msg.err != nil {
-			m.setError("Radio : " + msg.err.Error())
+			m.setError(txt("Radio : %s", msg.err.Error()))
 			break
 		}
 		ids := make([]string, len(m.queue))
@@ -378,20 +384,20 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		fresh := yt.ExcludeIDs(msg.tracks, ids...)
 		if len(fresh) == 0 {
-			m.setStatus("Radio : aucune suggestion de plus")
+			m.setStatus(txt("Radio : aucune suggestion de plus"))
 			break
 		}
 		first := len(m.queue)
 		m.enqueue(fresh...)
-		m.setStatus("Radio : " + plural(len(fresh), "piste ajoutée", "pistes ajoutées"))
+		m.setStatus(txt("Radio : %s", plural(len(fresh), "piste ajoutée", "pistes ajoutées")))
 		if play {
 			return m, m.startTrack(first, true)
 		}
 	case tagsDoneMsg:
 		if msg.err != nil {
-			m.setError("Tags : " + msg.err.Error())
+			m.setError(txt("Tags : %s", msg.err.Error()))
 		} else {
-			m.setStatus("Tags mis à jour : " + msg.title)
+			m.setStatus(txt("Tags mis à jour : %s", msg.title))
 		}
 		m.syncAll()
 	case themeMsg:
@@ -408,7 +414,7 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(cmd, m.waitPlayer())
 	case playerClosedMsg:
 		m.playing = false
-		m.setError("mpv s'est arrêté ; relancez yt-tui")
+		m.setError(txt("mpv s'est arrêté ; relancez yt-tui"))
 	case dlUpdateMsg:
 		if msg.id < len(m.downloads) {
 			r := m.downloads[msg.id]
@@ -440,7 +446,7 @@ func (m *Model) onDownloadDone(msg dlDoneMsg) {
 	r.state, r.pct = dlDone, 100
 	m.lib.Refresh()
 	m.syncAll()
-	m.setStatus("Téléchargé : " + r.track.Title)
+	m.setStatus(txt("Téléchargé : %s", r.track.Title))
 	if m.pendingID == r.track.ID {
 		m.pendingID = ""
 		if m.qpos >= 0 && m.qpos < len(m.queue) && m.queue[m.qpos].ID == r.track.ID {
@@ -462,16 +468,16 @@ func (m *Model) refreshLibrary() tea.Cmd {
 		return nil
 	}
 	m.libBusy = true
-	m.setStatus("Analyse du dossier…")
+	m.setStatus(txt("Analyse du dossier…"))
 	lib := m.lib
 	return func() tea.Msg { return libRefreshedMsg{err: lib.Refresh()} }
 }
 
 func plural(n int, one, many string) string {
 	if n == 1 {
-		return "1 " + one
+		return "1 " + txt(one)
 	}
-	return itoa(n) + " " + many
+	return itoa(n) + " " + txt(many)
 }
 
 // wantThumbs lance le chargement des images manquantes autour des curseurs.
@@ -631,21 +637,21 @@ func (m *Model) cycleSleep() {
 	switch {
 	case m.sleepEOT:
 		m.sleepEOT, m.sleepAt = false, time.Time{}
-		m.setStatus("Minuteur : off")
+		m.setStatus(txt("Minuteur : off"))
 	case m.sleepAt.IsZero():
 		m.sleepAt = m.now().Add(sleepSteps[0])
-		m.setStatus("Minuteur : arrêt dans 15 min")
+		m.setStatus(txt("Minuteur : arrêt dans %d min", 15))
 	default:
 		left := m.sleepAt.Sub(m.now())
 		for _, d := range sleepSteps {
 			if left < d-time.Minute { // palier suivant : on ne revient jamais en arrière
 				m.sleepAt = m.now().Add(d)
-				m.setStatus("Minuteur : arrêt dans " + itoa(int(d.Minutes())) + " min")
+				m.setStatus(txt("Minuteur : arrêt dans %d min", int(d.Minutes())))
 				return
 			}
 		}
 		m.sleepAt, m.sleepEOT = time.Time{}, true
-		m.setStatus("Minuteur : arrêt à la fin de la piste")
+		m.setStatus(txt("Minuteur : arrêt à la fin de la piste"))
 	}
 }
 
@@ -653,10 +659,10 @@ func (m *Model) cycleSleep() {
 func (m Model) sleepLabel() string {
 	switch {
 	case m.sleepEOT:
-		return "⏾ fin de piste"
+		return txt("⏾ fin de piste")
 	case !m.sleepAt.IsZero():
 		left := max(0, int((m.sleepAt.Sub(m.now())+59*time.Second)/time.Minute))
-		return "⏾ " + itoa(left) + " min"
+		return txt("⏾ %d min", left)
 	}
 	return ""
 }
@@ -670,7 +676,7 @@ func (m *Model) checkSleep() {
 	if m.playing && !m.paused {
 		m.pl.TogglePause()
 	}
-	m.setStatus("Minuteur écoulé : lecture mise en pause")
+	m.setStatus(txt("Minuteur écoulé : lecture mise en pause"))
 }
 
 // setTheme applique t à toute l'interface (styles, barre de progression, curseurs de saisie).

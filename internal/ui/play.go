@@ -26,7 +26,7 @@ func (m *Model) startTrack(i int, pushHistory bool) tea.Cmd {
 		err = m.pl.LoadStream("yt-dlp", yt.StreamArgs(t)...)
 	}
 	if err != nil {
-		m.setError("mpv : " + err.Error())
+		m.setError(txt("mpv : %s", err.Error()))
 		return nil
 	}
 	if pushHistory && m.qpos >= 0 && m.qpos != i {
@@ -63,10 +63,10 @@ func (m *Model) startTrack(i int, pushHistory bool) tea.Cmd {
 	m.syncQueue()
 	theme := tea.Batch(m.themeCmd(t.ID), m.prefetchRadio(i))
 	if local {
-		m.setStatus("Lecture (local) : " + t.Title)
+		m.setStatus(txt("Lecture (local) : %s", t.Title))
 		return theme
 	}
-	m.setStatus("Lecture (streaming) : " + t.Title)
+	m.setStatus(txt("Lecture (streaming) : %s", t.Title))
 	if m.cfg.AutoCache {
 		m.enqueueDownload(t)
 	}
@@ -210,19 +210,19 @@ func (m *Model) moveInQueue(i, delta int) int {
 
 func (m *Model) enqueueDownload(t yt.Track) {
 	if _, ok := m.lib.Path(t.ID); ok {
-		m.setStatus("Déjà téléchargé : " + t.Title)
+		m.setStatus(txt("Déjà téléchargé : %s", t.Title))
 		return
 	}
 	for _, r := range m.downloads {
 		if r.track.ID == t.ID && (r.state == dlQueued || r.state == dlRunning) {
-			m.setStatus("Téléchargement déjà en cours : " + t.Title)
+			m.setStatus(txt("Téléchargement déjà en cours : %s", t.Title))
 			return
 		}
 	}
 	row := &dlRow{id: len(m.downloads), track: t}
 	m.downloads = append(m.downloads, row)
 	m.dl.start(row.id, t)
-	m.setStatus("Téléchargement ajouté : " + t.Title)
+	m.setStatus(txt("Téléchargement ajouté : %s", t.Title))
 }
 
 func (m *Model) onPlayer(ev player.Event) tea.Cmd {
@@ -251,7 +251,7 @@ func (m *Model) onPlayer(ev player.Event) tea.Cmd {
 		if m.sleepEOT {
 			m.sleepEOT = false
 			m.playing = false
-			m.setStatus("Minuteur : lecture arrêtée à la fin de la piste")
+			m.setStatus(txt("Minuteur : lecture arrêtée à la fin de la piste"))
 			return nil
 		}
 		return m.goNext(true)
@@ -262,14 +262,14 @@ func (m *Model) onPlayer(ev player.Event) tea.Cmd {
 			// qui télécharge par morceaux, réussit : on télécharge puis on joue.
 			m.pendingID = m.cur.ID
 			m.enqueueDownload(m.cur)
-			m.setStatus("Streaming refusé (" + ev.Err + ") — téléchargement avant lecture : " + m.cur.Title)
+			m.setStatus(txt("Streaming refusé (%s) — téléchargement avant lecture : %s", ev.Err, m.cur.Title))
 			return nil
 		}
-		m.setError("Lecture impossible : " + ev.Err)
+		m.setError(txt("Lecture impossible : %s", ev.Err))
 	}
 	return nil
 }
 
 func (m Model) repeatLabel() string {
-	return [...]string{"off", "file", "piste"}[m.repeat]
+	return txt([...]string{"off", "file", "piste"}[m.repeat])
 }

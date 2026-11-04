@@ -108,7 +108,7 @@ type hint struct{ key, desc string }
 func renderHints(hs []hint, w int) string {
 	parts := make([]string, len(hs))
 	for i, h := range hs {
-		parts[i] = keyStyle.Render(h.key) + " " + mutedStyle.Render(h.desc)
+		parts[i] = keyStyle.Render(txt(h.key)) + " " + mutedStyle.Render(txt(h.desc))
 	}
 	return trunc(strings.Join(parts, "  "), w)
 }

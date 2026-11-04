@@ -93,7 +93,7 @@ func (m *Model) layout() {
 
 func (m Model) View() string {
 	if m.termW < minWidth || m.termH < minHeight {
-		return fmt.Sprintf("Terminal trop petit (%d×%d) — minimum %d×%d", m.termW, m.termH, minWidth, minHeight)
+		return txt("Terminal trop petit (%d×%d) — minimum %d×%d", m.termW, m.termH, minWidth, minHeight)
 	}
 	g := m.geom()
 	var body string
@@ -127,8 +127,8 @@ func (m Model) View() string {
 
 func (m Model) headerView() string {
 	parts := []string{logoStyle.Render("♪ yt-tui"), "  "}
-	for i, n := range tabNames {
-		label := fmt.Sprintf("%d %s", i+1, n)
+	for i := 0; i < int(numTabs); i++ {
+		label := fmt.Sprintf("%d %s", i+1, tabName(tab(i)))
 		if tab(i) == m.tab {
 			parts = append(parts, tabActive.Render(label))
 		} else {
@@ -147,7 +147,7 @@ func (m Model) summary() string {
 		return plural(len(m.queue), "piste", "pistes") + " · " + fmtTime(totalDuration(m.queue).Seconds())
 	case tabSearch:
 		if m.loading {
-			return "recherche…"
+			return txt("recherche…")
 		}
 		return plural(m.searchCount(), "résultat", "résultats")
 	case tabLibrary:
@@ -160,7 +160,7 @@ func (m Model) summary() string {
 	case tabPlaylists:
 		return plural(len(m.plNames), "playlist", "playlists")
 	}
-	return plural(len(m.downloads), "téléchargement", "téléchargements") + " · " + itoa(m.activeDownloads()) + " en cours"
+	return plural(len(m.downloads), "téléchargement", "téléchargements") + " · " + txt("%d en cours", m.activeDownloads())
 }
 
 func shortPath(p string) string {
@@ -215,13 +215,13 @@ func (m Model) hintsView() string {
 func (m Model) stateLabel() string {
 	switch {
 	case !m.hasCur:
-		return mutedStyle.Render("♪ Rien en lecture")
+		return mutedStyle.Render(txt("♪ Rien en lecture"))
 	case !m.playing:
-		return mutedStyle.Render("■ Arrêt")
+		return mutedStyle.Render(txt("■ Arrêt"))
 	case m.paused:
-		return mutedStyle.Render("⏸ Pause")
+		return mutedStyle.Render(txt("⏸ Pause"))
 	}
-	return pinkBold.Render("▶ Lecture")
+	return pinkBold.Render(txt("▶ Lecture"))
 }
 
 func (m Model) playerBar() string {
@@ -231,22 +231,22 @@ func (m Model) playerBar() string {
 		if m.hasCur {
 			line += "  " + textStyle.Render(m.cur.Title) + mutedStyle.Render(" — "+m.cur.Channel+" · "+fmtTime(m.pos)+" / "+fmtTime(m.dur))
 		} else {
-			line += mutedStyle.Render("  — / pour rechercher de la musique")
+			line += mutedStyle.Render(txt("  — / pour rechercher de la musique"))
 		}
 		right := ""
 		if m.tab == tabLibrary && !m.lib.ScannedAt().IsZero() {
-			right = "Dernière analyse : " + ago(m.lib.ScannedAt()) + " "
+			right = txt("Dernière analyse : %s", ago(m.lib.ScannedAt())) + " "
 		}
 		return panel(spread(line, mutedStyle.Render(right), iw), m.width, 3, cBorderOff)
 	}
-	optTxt := fmt.Sprintf("⇄ aléatoire %s · ↻ répéter : %s", onOff(m.shuffle), m.repeatLabel())
+	optTxt := txt("⇄ aléatoire %s · ↻ répéter : %s", onOff(m.shuffle), m.repeatLabel())
 	if m.radio {
-		optTxt += " · ◉ radio"
+		optTxt += txt(" · ◉ radio")
 	}
 	if s := m.sleepLabel(); s != "" {
 		optTxt += " · " + s
 	}
-	opts := mutedStyle.Render(optTxt + fmt.Sprintf(" · vol %.0f%% ", m.vol))
+	opts := mutedStyle.Render(optTxt + txt(" · vol %.0f%% ", m.vol))
 	line1 := " " + m.stateLabel()
 	if m.hasCur {
 		line1 += "  " + boldText.Render(m.cur.Title) + mutedStyle.Render(" — "+m.cur.Channel)
@@ -271,9 +271,9 @@ func spread(left, right string, w int) string {
 
 func (m Model) promptBar(h int) string {
 	iw := m.width - 2
-	hint := "entrée valider · esc annuler"
+	hint := txt("entrée valider · esc annuler")
 	if m.promptKind.isConfirm() {
-		hint = "entrée confirmer · esc annuler"
+		hint = txt("entrée confirmer · esc annuler")
 	}
 	left := " " + pinkBold.Render(m.promptLabel)
 	if !m.promptKind.isConfirm() {
@@ -286,7 +286,7 @@ func ago(t time.Time) string {
 	d := time.Since(t)
 	switch {
 	case d < time.Minute:
-		return "à l'instant"
+		return txt("à l'instant")
 	case d < time.Hour:
 		return fmt.Sprintf("%d min", int(d.Minutes()))
 	case d < 48*time.Hour:
@@ -320,8 +320,8 @@ func tableHead(w int, left string) string {
 	nw, dw := rowCols(w, true)
 	line := " " + mutedStyle.Render(fit(pick3(nw >= 5, "#", ""), nw, false)) + strings.Repeat(" ", thumb.Cols+2) +
 		mutedStyle.Render(fit(left, max(1, w-1-nw-thumb.Cols-2-dw), false))
-	if dw > 0 {
-		line += mutedStyle.Render(strings.Repeat(" ", dw-len("Durée")) + "Durée")
+	if dur := txt("Durée"); dw > 0 {
+		line += mutedStyle.Render(strings.Repeat(" ", max(0, dw-lipgloss.Width(dur))) + dur)
 	}
 	return trunc(line, w)
 }
@@ -341,8 +341,8 @@ func rule(w int) string {
 
 func (m Model) queueBody(g geom) string {
 	iw := g.leftW - 2
-	inner := titleLine("File d'attente", "", iw) + "\n" + tableHead(iw, "Titre · Chaîne") + "\n" + rule(iw) + "\n" +
-		listOrEmpty(&m.queueL, "La file est vide. Appuyez sur a pour ajouter un morceau.")
+	inner := titleLine(txt("File d'attente"), "", iw) + "\n" + tableHead(iw, txt("Titre · Chaîne")) + "\n" + rule(iw) + "\n" +
+		listOrEmpty(&m.queueL, txt("La file est vide. Appuyez sur a pour ajouter un morceau."))
 	left := panel(inner, g.leftW, g.bodyH, cBorderOn)
 	if g.sideW == 0 {
 		return left
@@ -352,23 +352,23 @@ func (m Model) queueBody(g geom) string {
 
 func (m Model) nowPlayingPanel(w, h int) string {
 	iw := w - 2
-	lines := []string{titleLine("En lecture", "", iw)}
+	lines := []string{titleLine(txt("En lecture"), "", iw)}
 	if !m.hasCur {
-		lines = append(lines, "", " "+mutedStyle.Render("Rien en lecture."))
+		lines = append(lines, "", " "+mutedStyle.Render(txt("Rien en lecture.")))
 		return panel(block(lines, iw, h-2), w, h, cBorderOff)
 	}
 	lines = append(lines, m.artLines(m.cur.ID, iw, h)...)
 	lines = append(lines, m.wrap(boldText, m.cur.Title, iw-2, 2)...)
 	lines = append(lines, " "+textStyle.Render(m.cur.Channel))
-	src := "YouTube · streaming"
+	src := txt("YouTube · streaming")
 	if m.curLocal {
-		src = "local · " + m.curFormat
+		src = txt("local · %s", m.curFormat)
 	}
-	lines = append(lines, " "+mutedStyle.Render(src), " "+mutedStyle.Render("Durée · "+fmtTime(m.dur)), "", " "+mutedStyle.Render("À suivre"))
+	lines = append(lines, " "+mutedStyle.Render(src), " "+mutedStyle.Render(txt("Durée · %s", fmtTime(m.dur))), "", " "+mutedStyle.Render(txt("À suivre")))
 	next := "—"
 	switch {
 	case m.shuffle:
-		next = "aléatoire"
+		next = txt("aléatoire")
 	case m.qpos >= 0 && m.qpos+1 < len(m.queue):
 		next = m.queue[m.qpos+1].Title
 	}
@@ -419,7 +419,8 @@ func (m Model) wrap(st lipgloss.Style, s string, w, n int) []string {
 
 func (m Model) chipsView() string {
 	parts := make([]string, numKinds)
-	for i, n := range kindNames {
+	for i := range parts {
+		n := kindName(searchKind(i))
 		if searchKind(i) == m.kind {
 			parts[i] = chipActive.Render(n)
 		} else {
@@ -444,9 +445,9 @@ func (m Model) searchBody(g geom) string {
 
 	h := g.bodyH - 3
 	iw := g.leftW - 2
-	title, extra := "Résultats", plural(m.searchCount(), "résultat", "résultats")
+	title, extra := txt("Résultats"), plural(m.searchCount(), "résultat", "résultats")
 	if m.drill != nil {
-		title, extra = "Playlist · "+m.drill.title, "esc : retour"
+		title, extra = txt("Playlist · %s", m.drill.title), txt("esc : retour")
 	}
 	inner := titleLine(title, extra, iw) + "\n" + listOrEmpty(&m.searchL, m.searchEmptyMsg())
 	left := panel(inner, g.leftW, h, cBorderOn)
@@ -458,14 +459,14 @@ func (m Model) searchBody(g geom) string {
 
 func (m Model) searchEmptyMsg() string {
 	if m.loading {
-		return "Recherche en cours…"
+		return txt("Recherche en cours…")
 	}
-	return "Tapez une recherche puis Entrée."
+	return txt("Tapez une recherche puis Entrée.")
 }
 
 func (m Model) previewPanel(w, h int) string {
 	iw := w - 2
-	lines := []string{titleLine("Aperçu", "", iw)}
+	lines := []string{titleLine(txt("Aperçu"), "", iw)}
 	switch {
 	case func() bool { _, ok := m.searchTrack(); return ok }():
 		t, _ := m.searchTrack()
@@ -473,32 +474,32 @@ func (m Model) previewPanel(w, h int) string {
 		lines = append(lines, m.wrap(boldText, t.Title, iw-2, 2)...)
 		lines = append(lines, " "+textStyle.Render(t.Channel))
 		if t.Duration > 0 {
-			lines = append(lines, " "+mutedStyle.Render("Durée · "+fmtTime(t.Duration.Seconds())))
+			lines = append(lines, " "+mutedStyle.Render(txt("Durée · %s", fmtTime(t.Duration.Seconds()))))
 		}
-		lines = append(lines, "", " "+keyStyle.Render("entrée")+mutedStyle.Render(" : lire"),
-			" "+keyStyle.Render("a")+mutedStyle.Render(" : ajouter à la file"),
-			" "+keyStyle.Render("P")+mutedStyle.Render(" : ajouter à une playlist"),
-			" "+keyStyle.Render("D")+mutedStyle.Render(" : télécharger"))
+		lines = append(lines, "", " "+keyStyle.Render(txt("entrée"))+mutedStyle.Render(txt(" : lire")),
+			" "+keyStyle.Render("a")+mutedStyle.Render(txt(" : ajouter à la file")),
+			" "+keyStyle.Render("P")+mutedStyle.Render(txt(" : ajouter à une playlist")),
+			" "+keyStyle.Render("D")+mutedStyle.Render(txt(" : télécharger")))
 	default:
 		e, ok := m.searchEntry()
 		if !ok {
-			lines = append(lines, "", " "+mutedStyle.Render("Sélectionnez un résultat."))
+			lines = append(lines, "", " "+mutedStyle.Render(txt("Sélectionnez un résultat.")))
 			break
 		}
-		kind := map[yt.Kind]string{yt.KindPlaylist: "Playlist", yt.KindChannel: "Chaîne"}[e.Kind]
+		kind := txt(map[yt.Kind]string{yt.KindPlaylist: "Playlist", yt.KindChannel: "Chaîne"}[e.Kind])
 		lines = append(lines, "")
 		lines = append(lines, m.wrap(boldText, e.Title, iw-2, 3)...)
 		lines = append(lines, " "+mutedStyle.Render(kind+" · "+e.Channel), "")
 		switch p := m.previews[entryKey(e)]; {
 		case p == nil || p.loading:
-			lines = append(lines, " "+mutedStyle.Render("Chargement…"))
+			lines = append(lines, " "+mutedStyle.Render(txt("Chargement…")))
 		case p.err != nil:
-			lines = append(lines, " "+errStyle.Render("Aperçu indisponible"))
+			lines = append(lines, " "+errStyle.Render(txt("Aperçu indisponible")))
 		default:
 			for i, t := range p.tracks {
 				lines = append(lines, " "+mutedStyle.Render(itoa(i+1)+" ")+textStyle.Render(t.Title))
 			}
-			lines = append(lines, "", " "+keyStyle.Render("entrée")+mutedStyle.Render(" : ouvrir"))
+			lines = append(lines, "", " "+keyStyle.Render(txt("entrée"))+mutedStyle.Render(txt(" : ouvrir")))
 		}
 	}
 	return panel(block(lines, iw, h-2), w, h, cBorderOff)
@@ -509,12 +510,12 @@ func (m Model) previewPanel(w, h int) string {
 func (m Model) libraryBody(g geom) string {
 	aW, bW, tW := m.libWidths()
 	b := g.bodyH
-	artists := panel(titleLine("Artistes", "", aW-2)+"\n"+listOrEmpty(&m.libArtists, "Aucune piste."), aW, b, borderFor(m.libCol == 0))
-	albums := panel(titleLine("Albums", "", bW-2)+"\n"+listOrEmpty(&m.libAlbums, ""), bW, b, borderFor(m.libCol == 1))
+	artists := panel(titleLine(txt("Artistes"), "", aW-2)+"\n"+listOrEmpty(&m.libArtists, txt("Aucune piste.")), aW, b, borderFor(m.libCol == 0))
+	albums := panel(titleLine(txt("Albums"), "", bW-2)+"\n"+listOrEmpty(&m.libAlbums, ""), bW, b, borderFor(m.libCol == 1))
 
-	title := strings.Trim(m.libAlbum()+" · "+m.libArtist(), " ·")
+	title := strings.Trim(m.libAlbum()+" · "+artistDisplay(m.libArtist()), " ·")
 	stats := " " + mutedStyle.Render(m.libStats())
-	tracks := panel(titleLine(title, "", tW-2)+"\n"+tableHead(tW-2, "Titre")+"\n"+rule(tW-2)+"\n"+
+	tracks := panel(titleLine(title, "", tW-2)+"\n"+tableHead(tW-2, txt("Titre"))+"\n"+rule(tW-2)+"\n"+
 		listOrEmpty(&m.libTracks, "")+"\n"+stats, tW, b, borderFor(m.libCol == 2))
 	return lipgloss.JoinHorizontal(lipgloss.Top, artists, " ", albums, " ", tracks)
 }
@@ -540,18 +541,18 @@ func (m Model) libStats() string {
 func (m Model) playlistsBody(g geom) string {
 	lW, rW := m.plWidths()
 	b := g.bodyH
-	newHint := " " + keyStyle.Render("n") + mutedStyle.Render(" : nouvelle playlist")
-	left := panel(titleLine("Mes playlists", "", lW-2)+"\n"+listOrEmpty(&m.plL, "Aucune playlist.")+"\n"+newHint, lW, b, borderFor(m.plCol == 0))
+	newHint := " " + keyStyle.Render("N") + mutedStyle.Render(txt(" : nouvelle playlist"))
+	left := panel(titleLine(txt("Mes playlists"), "", lW-2)+"\n"+listOrEmpty(&m.plL, txt("Aucune playlist."))+"\n"+newHint, lW, b, borderFor(m.plCol == 0))
 
-	title := m.plName()
+	title := plDisplay(m.plName())
 	extra := ""
 	if title == "" {
-		title = "Playlist"
+		title = txt("Playlist")
 	} else {
 		extra = plural(len(m.plData), "piste", "pistes") + " · " + fmtTime(totalDuration(m.plData).Seconds())
 	}
-	right := panel(titleLine(title, extra, rW-2)+"\n"+tableHead(rW-2, "Titre · Chaîne")+"\n"+rule(rW-2)+"\n"+
-		listOrEmpty(&m.plTracks, "Cette playlist est vide. Ajoutez des pistes avec p."), rW, b, borderFor(m.plCol == 1))
+	right := panel(titleLine(title, extra, rW-2)+"\n"+tableHead(rW-2, txt("Titre · Chaîne"))+"\n"+rule(rW-2)+"\n"+
+		listOrEmpty(&m.plTracks, txt("Cette playlist est vide. Ajoutez des pistes avec P.")), rW, b, borderFor(m.plCol == 1))
 	return joinH(left, right)
 }
 
