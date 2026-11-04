@@ -23,10 +23,10 @@ instances run, the following ones are named `…yt-tui.instance<pid>`.
 
 ## Quick install
 ```
-curl -fsSL https://raw.githubusercontent.com/kevinbalicot/yt-tui/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/boutdecode/yt-tui/main/install.sh | bash
 ```
 Installs the binary (Linux amd64/arm64, SHA256 checksum verified) in `~/.local/bin` and reports missing
-dependencies. Variables: `YT_TUI_VERSION` (e.g. `0.2.0`), `YT_TUI_PREFIX` (default `~/.local`).
+dependencies. Variables: `YT_TUI_VERSION` (e.g. `0.1.0`), `YT_TUI_PREFIX` (default `~/.local`).
 Uninstall: `curl -fsSL …/install.sh | bash -s -- --uninstall`.
 
 ## Requirements

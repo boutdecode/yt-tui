@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Installateur de yt-tui :  curl -fsSL https://raw.githubusercontent.com/kevinbalicot/yt-tui/main/install.sh | bash
+# Installateur de yt-tui :  curl -fsSL https://raw.githubusercontent.com/boutdecode/yt-tui/main/install.sh | bash
 #
 # Variables :
-#   YT_TUI_VERSION   version à installer, ex. 0.2.0 ou v0.2.0 (défaut : la dernière)
+#   YT_TUI_VERSION   version à installer, ex. 0.1.0 ou v0.1.0 (défaut : la dernière)
 #   YT_TUI_PREFIX    préfixe d'installation (défaut : ~/.local → ~/.local/bin/yt-tui)
 #   YT_TUI_BASE_URL  surcharge l'URL de téléchargement (tests / miroir)
 # Option : --uninstall  supprime yt-tui du préfixe.
 set -euo pipefail
 
-REPO="kevinbalicot/yt-tui"
+REPO="boutdecode/yt-tui"
 PREFIX="${YT_TUI_PREFIX:-$HOME/.local}"
 VERSION="${YT_TUI_VERSION:-latest}"
 

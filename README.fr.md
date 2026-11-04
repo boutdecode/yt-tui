@@ -23,10 +23,10 @@ intégration. Si plusieurs instances tournent, les suivantes se nomment `…yt-t
 
 ## Installation rapide
 ```
-curl -fsSL https://raw.githubusercontent.com/kevinbalicot/yt-tui/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/boutdecode/yt-tui/main/install.sh | bash
 ```
 Installe le binaire (Linux amd64/arm64, somme SHA256 vérifiée) dans `~/.local/bin` et signale les
-dépendances manquantes. Variables : `YT_TUI_VERSION` (ex. `0.2.0`), `YT_TUI_PREFIX` (défaut `~/.local`).
+dépendances manquantes. Variables : `YT_TUI_VERSION` (ex. `0.1.0`), `YT_TUI_PREFIX` (défaut `~/.local`).
 Désinstaller : `curl -fsSL …/install.sh | bash -s -- --uninstall`.
 
 ## Prérequis
