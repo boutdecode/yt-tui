@@ -285,7 +285,20 @@ func (m Model) saveSession() {
 func (m Model) SaveSession() { m.saveSession() }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(textinput.Blink, m.dl.wait(), m.waitPlayer())
+	cmds := []tea.Cmd{textinput.Blink, m.dl.wait(), m.waitPlayer()}
+	if !m.cfg.NoUpdateCheck {
+		cmds = append(cmds, m.checkYtDlp())
+	}
+	return tea.Batch(cmds...)
+}
+
+// checkYtDlp vérifie en arrière-plan si une version plus récente de yt-dlp existe.
+func (m Model) checkYtDlp() tea.Cmd {
+	ctx := m.ctx
+	return func() tea.Msg {
+		cur, latest, outdated, err := yt.CheckUpdate(ctx)
+		return ytUpdateMsg{current: cur, latest: latest, outdated: outdated, err: err}
+	}
 }
 
 func (m Model) waitPlayer() tea.Cmd {
@@ -370,6 +383,12 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.syncLibrary()
 		m.syncQueue()
 		m.setStatus(txt("Bibliothèque analysée : %s", plural(len(m.lib.Tracks()), "piste", "pistes")))
+	case ytUpdateMsg:
+		if msg.err != nil {
+			log.Printf("vérification yt-dlp: %v", msg.err)
+		} else if msg.outdated {
+			m.setStatus(txt("yt-dlp %s disponible (installé : %s) — mettez-le à jour (yt-dlp -U ou votre gestionnaire de paquets)", msg.latest, msg.current))
+		}
 	case radioMsg:
 		m.radioBusy = false
 		play := m.radioPlay

@@ -17,6 +17,9 @@ var en = map[string]string{
 	"téléchargements": "downloads", "piste ajoutée": "track added", "pistes ajoutées": "tracks added",
 	"%d en cours": "%d in progress",
 
+	"ne pas vérifier les mises à jour de yt-dlp au lancement":                                              "do not check for yt-dlp updates at launch",
+	"yt-dlp %s disponible (installé : %s) — mettez-le à jour (yt-dlp -U ou votre gestionnaire de paquets)": "yt-dlp %s is available (installed: %s) — update it (yt-dlp -U or your package manager)",
+
 	// états
 	"en attente": "queued", "terminé": "done", "échec": "failed", "off": "off", "file": "queue",
 	"♪ Rien en lecture": "♪ Nothing playing", "■ Arrêt": "■ Stopped", "⏸ Pause": "⏸ Paused", "▶ Lecture": "▶ Playing",

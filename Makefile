@@ -1,6 +1,6 @@
 # yt-tui — build, tests, installation locale et paquet .deb
 GO      ?= $(shell command -v go 2>/dev/null || echo $(HOME)/.local/go/bin/go)
-VERSION ?= 0.1.0
+VERSION ?= 0.2.0
 ARCH    ?= $(shell dpkg --print-architecture 2>/dev/null || echo amd64)
 PREFIX  ?= $(HOME)/.local
 LDFLAGS  = -s -w -X main.version=$(VERSION)

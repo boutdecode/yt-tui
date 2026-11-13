@@ -68,5 +68,9 @@ func lastLine(s string, fallback error) string {
 		return fallback.Error()
 	}
 	lines := strings.Split(s, "\n")
-	return lines[len(lines)-1]
+	last := lines[len(lines)-1]
+	if strings.Contains(s, "not a bot") {
+		last += " — ajoutez « --cookies-from-browser firefox » à ~/.config/yt-tui/yt-dlp.conf"
+	}
+	return last
 }

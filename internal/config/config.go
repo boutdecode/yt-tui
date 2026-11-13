@@ -9,16 +9,17 @@ import (
 
 // Config est la configuration d'exécution de yt-tui.
 type Config struct {
-	MusicDir    string // dossier des fichiers téléchargés
-	ConfigDir   string // dossier des playlists
-	CacheDir    string // cache (miniatures)
-	Format      string // mp3 | opus | m4a
-	AutoCache   bool   // télécharge en arrière-plan ce qui est lu en streaming
-	Results     int    // nombre de résultats de recherche
-	Transparent bool   // ne pas peindre le fond : garde celui du terminal
-	NoNotify    bool   // pas de notifications de bureau
-	NoResume    bool   // ne pas restaurer la session précédente
-	StaticTheme bool   // palette fixe : ne suit pas les couleurs de la pochette
+	MusicDir      string // dossier des fichiers téléchargés
+	ConfigDir     string // dossier des playlists
+	CacheDir      string // cache (miniatures)
+	Format        string // mp3 | opus | m4a
+	AutoCache     bool   // télécharge en arrière-plan ce qui est lu en streaming
+	Results       int    // nombre de résultats de recherche
+	Transparent   bool   // ne pas peindre le fond : garde celui du terminal
+	NoNotify      bool   // pas de notifications de bureau
+	NoResume      bool   // ne pas restaurer la session précédente
+	NoUpdateCheck bool   // ne pas vérifier les mises à jour de yt-dlp au lancement
+	StaticTheme   bool   // palette fixe : ne suit pas les couleurs de la pochette
 }
 
 var formats = map[string]bool{"mp3": true, "opus": true, "m4a": true, "flac": true, "wav": true}
@@ -97,7 +98,9 @@ func (c Config) Ensure() error {
 		return nil
 	}
 	conf := "# Options yt-dlp utilisées par yt-tui (recherche, téléchargement et streaming mpv).\n" +
-		"--extractor-args youtube:player_client=web,mweb\n"
+		"--extractor-args youtube:player_client=web,mweb\n" +
+		"# Si YouTube répond « Sign in to confirm you're not a bot », décommentez (ou changez de navigateur) :\n" +
+		"# --cookies-from-browser firefox\n"
 	for _, rt := range []string{"deno", "node", "bun"} {
 		if _, err := exec.LookPath(rt); err == nil {
 			conf += "--js-runtimes " + rt + "\n"

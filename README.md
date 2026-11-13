@@ -67,6 +67,20 @@ yt-tui list [--dir D] [--json]                 # local library
 On first launch, `~/.config/yt-tui/yt-dlp.conf` is created (JS runtime, YouTube client); it is used by
 search, download and mpv streaming. Edit it if YouTube changes.
 
+At launch, yt-tui checks in the background (GitHub releases API, nothing about you is sent) whether a newer yt-dlp
+exists and shows a status message if so; disable with `--no-update-check`.
+
+### "Sign in to confirm you're not a bot"
+YouTube sometimes asks yt-dlp to prove it is not a bot (depends on the video and your IP). Fix: let yt-dlp use the
+cookies of a browser where you are logged in to YouTube, by adding this line to `~/.config/yt-tui/yt-dlp.conf`:
+
+```
+--cookies-from-browser firefox
+```
+
+Replace `firefox` with `chrome`, `chromium`, `brave`… (Chromium-based browsers may need to be closed), or use
+`--cookies /path/to/cookies.txt` with an exported file. If the error comes back, log in to YouTube again in that browser.
+
 ## Shortcuts
 Five tabs (`1` Queue, `2` Search, `3` Library, `4` Playlists, `5` Downloads).
 

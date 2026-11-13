@@ -23,6 +23,13 @@ type collectionMsg struct {
 	err    error
 }
 
+// ytUpdateMsg : résultat de la vérification de version de yt-dlp au lancement.
+type ytUpdateMsg struct {
+	current, latest string
+	outdated        bool
+	err             error
+}
+
 type libRefreshedMsg struct{ err error }
 
 type playerClosedMsg struct{}
